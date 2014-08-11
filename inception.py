@@ -58,7 +58,7 @@ class Database():
 
 	def get_by_id(self, id):
 		db = self.__dbget()
-		return db.execute('select * from inception where id = ?', (id,))
+		return db.execute('select * from inception where id = ?', (id,)).fetchone()
 
 	def get(self, collection=None, query=None):
 		db = self.__dbget()
