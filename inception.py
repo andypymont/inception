@@ -90,3 +90,21 @@ class Database():
 		db = self.__dbget()
 		db.execute(sql, params)
 		db.commit()
+
+	def save_all(self, documents, collection=None):
+		collection = document.get('_collection', None) or collection
+		if not collection:
+			collection = ''
+
+		db = self.__dbget()
+		for document in documents:
+			docid = document.pop('_id', None)
+			if docid:
+				sql, params = ('insert or replace into inception (id, collection, document) values (?, ?, ?)',
+						   (docid, collection, json.dumps(document)))
+			else:
+				sql, params = ('insert or replace into inception (collection, document) values (?, ?)',
+							   (collection, json.dumps(document)))
+			db.execute(sql, params)
+
+		db.commit()

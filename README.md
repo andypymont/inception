@@ -1,6 +1,6 @@
 ## Synopsis
 
-Simple no-SQL database implemented using Python SQLite and designed for Flask web applications.
+Simple no-SQL database for Flask web applications, implemented using Python SQLite.
 
 ## Why 'Inception'?
 
