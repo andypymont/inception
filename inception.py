@@ -92,12 +92,13 @@ class Database():
 		db.commit()
 
 	def save_all(self, documents, collection=None):
-		collection = document.get('_collection', None) or collection
-		if not collection:
-			collection = ''
-
 		db = self.__dbget()
+		
 		for document in documents:
+			collection = document.get('_collection', None) or collection
+			if not collection:
+				collection = ''
+
 			docid = document.pop('_id', None)
 			if docid:
 				sql, params = ('insert or replace into inception (id, collection, document) values (?, ?, ?)',
