@@ -7,8 +7,8 @@ except ImportError:
 
 def inception_factory(cursor, row):
 	rv = json.loads(row[2])
-	rv.update(_id=row[0],
-			  _collection=row[1])
+	rv.update(_id=unicode(row[0]),
+			  _collection=unicode(row[1]))
 	return rv
 
 def filter_results(results, filters):
@@ -82,7 +82,7 @@ class Database():
 		docid = document.pop('_id', None)
 		if docid:
 			sql, params = ('insert or replace into inception (id, collection, document) values (?, ?, ?)',
-						   (docid, collection, json.dumps(document)))
+						   (int(docid), collection, json.dumps(document)))
 		else:
 			sql, params = ('insert or replace into inception (collection, document) values (?, ?)',
 						   (collection, json.dumps(document)))
