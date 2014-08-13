@@ -7,7 +7,7 @@ except ImportError:
 
 def inception_factory(cursor, row):
 	rv = json.loads(row[2])
-	rv.update(_id=unicode(row[0]),
+	rv.update(_id=row[0],
 			  _collection=unicode(row[1]))
 	return rv
 
