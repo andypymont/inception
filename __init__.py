@@ -2,8 +2,8 @@
 
 A database within a database, and there's no sequel.
 
-Initialise the database by creating a new instance, specifying the path (or using nemory a la sqlite3, as here). If this
-isn't an existing database, use the __dbinit() method to initialise:
+Initialise the database by creating a new instance, specifying the path. If this isn't an existing database, use the __dbinit()
+method to initialise (create the tables etc.):
 
 	>>> db = Database('__test__.db')
 	>>> db._Database__dbinit()
