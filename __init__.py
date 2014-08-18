@@ -1,3 +1,52 @@
+"""Simple no-SQL database implemented using Python SQLite and designed for Flask web applications.
+
+A database within a database, and there's no sequel.
+
+Initialise the database by creating a new instance, specifying the path (or using nemory a la sqlite3, as here). If this
+isn't an existing database, use the __dbinit() method to initialise:
+
+	>>> db = Database('__test__.db')
+	>>> db._Database__dbinit()
+
+Save dictionaries (containing nested lists/dictionaries as needed) for future retrieval:
+
+	>>> db.save(dict(list=[1, 2, 3], name='One'), collection='test')
+	>>> db.save(dict(list=[2, 3, 4], name='Two'), collection='test')
+	>>> db.save(dict(list=[3, 4, 5], name='Three'), collection='test')
+	>>> db.get(collection='test')
+	[{'_collection': u'test', '_id': 1, u'list': [1, 2, 3], u'name': u'One'}, {'_collection': u'test', '_id': 2, u'list': [2, 3, 4], u'name': u'Two'}, {'_collection': u'test', '_id': 3, u'list': [3, 4, 5], u'name': u'Three'}]
+
+You can query results by providing a query dictionary to the .get(..) method:
+
+	>>> db.get('test', {'name': 'One'})
+	[{'_collection': u'test', '_id': 1, u'list': [1, 2, 3], u'name': u'One'}]
+
+Alternatively, some of the methods provided can be functions, which will be used to test the values:
+
+	>>> db.get('test', {'list': lambda lst: (4 in lst)})
+	[{'_collection': u'test', '_id': 2, u'list': [2, 3, 4], u'name': u'Two'}, {'_collection': u'test', '_id': 3, u'list': [3, 4, 5], u'name': u'Three'}]
+
+Having retrieved an object, you can edit it, and then save it again using the save() method:
+
+	>>> one = db.get('test', {'name': 'One'})[0]
+	>>> one['hello'] = 'world'
+	>>> db.save(one)
+	>>> db.get('test', {'name': 'One'})[0]['hello']
+	u'world'
+
+Or save multiple items at once using save_all():
+
+	>>> edits = db.get('test', {'list': lambda lst: (4 in lst)})
+	>>> for item in edits: item['x'] = 5
+	>>> db.save_all(edits)
+	>>> db.get('test', {'x': 5})
+	[{u'name': u'Two', u'_collection': u'test', u'x': 5, '_id': 2, u'list': [2, 3, 4]}, {u'name': u'Three', u'_collection': u'test', u'x': 5, '_id': 3, u'list': [3, 4, 5]}]
+
+Like sqlite3, the database is in a file in the filesystem which can be copied/deleted/etc: 
+
+	>>> import os; os.remove('__test__.db')
+"""
+
 import sqlite3
 
 try:
@@ -109,3 +158,10 @@ class Database():
 			db.execute(sql, params)
 
 		db.commit()
+
+def _test():
+	import doctest
+	doctest.testmod()
+
+if __name__ == '__main__':
+	_test()
