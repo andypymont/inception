@@ -85,6 +85,16 @@ def filter_results(results, filters):
 		return True
 	return [result for result in results if filter_result(result, filters)]
 
+def _contains(searchtext):
+	"""
+	Helper functin for testing whether a certain property contains a certain value, avoiding writing one's own lambdas in the
+	query.
+	"""
+	def contains(text):
+		return (searchtext in text)
+
+	return contains
+
 class Database():
 
 	def __init__(self, path, app=None):
