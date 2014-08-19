@@ -42,6 +42,19 @@ Or save multiple items at once using save_all():
 	>>> db.get('test', {'x': 5})
 	[{u'name': u'Two', u'_collection': u'test', u'x': 5, '_id': 2, u'list': [2, 3, 4]}, {u'name': u'Three', u'_collection': u'test', u'x': 5, '_id': 3, u'list': [3, 4, 5]}]
 
+Delete items directly with their id:
+
+	>>> db.delete_by_id(2)
+
+Or by using the objects returned from get:
+
+	>>> db.delete(db.get('test', {'name': 'Three'})[0])
+
+Which will have removed them from the database:
+
+	>>> db.get('test')
+	[{u'name': u'One', u'_collection': u'test', '_id': 1, u'list': [1, 2, 3], u'hello': u'world'}]
+
 Like sqlite3, the database is in a file in the filesystem which can be copied/deleted/etc: 
 
 	>>> import os; os.remove('__test__.db')
@@ -158,6 +171,15 @@ class Database():
 			db.execute(sql, params)
 
 		db.commit()
+
+	def delete_by_id(self, id):
+		db = self.__dbget()
+		db.execute('delete from inception where id = ?', (id,))
+		db.commit()
+
+	def delete(self, document):
+		if '_id' in document.keys():
+			self.delete_by_id(document['_id'])
 
 def _test():
 	import doctest
