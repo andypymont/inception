@@ -151,7 +151,7 @@ class Database():
 		if not collection:
 			collection = ''
 
-		docid = document.pop('_id', None)
+		docid = document.get('_id', None)
 		if docid:
 			sql, params = ('insert or replace into inception (id, collection, document) values (?, ?, ?)',
 						   (int(docid), collection, json.dumps(document)))
@@ -171,7 +171,7 @@ class Database():
 			if not collection:
 				collection = ''
 
-			docid = document.pop('_id', None)
+			docid = document.get('_id', None)
 			if docid:
 				sql, params = ('insert or replace into inception (id, collection, document) values (?, ?, ?)',
 						   (docid, collection, json.dumps(document)))
