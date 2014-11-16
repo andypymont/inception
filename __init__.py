@@ -14,17 +14,17 @@ Save dictionaries (containing nested lists/dictionaries as needed) for future re
 	>>> db.save(dict(list=[2, 3, 4], name='Two'), collection='test')
 	>>> db.save(dict(list=[3, 4, 5], name='Three'), collection='test')
 	>>> db.get(collection='test')
-	[{'_collection': u'test', '_id': 1, u'list': [1, 2, 3], u'name': u'One'}, {'_collection': u'test', '_id': 2, u'list': [2, 3, 4], u'name': u'Two'}, {'_collection': u'test', '_id': 3, u'list': [3, 4, 5], u'name': u'Three'}]
+	[{u'_collection': u'test', u'_id': 1, u'list': [1, 2, 3], u'name': u'One'}, {u'_collection': u'test', u'_id': 2, u'list': [2, 3, 4], u'name': u'Two'}, {u'_collection': u'test', u'_id': 3, u'list': [3, 4, 5], u'name': u'Three'}]
 
 You can query results by providing a query dictionary to the .get(..) method:
 
 	>>> db.get('test', {'name': 'One'})
-	[{'_collection': u'test', '_id': 1, u'list': [1, 2, 3], u'name': u'One'}]
+	[{u'_collection': u'test', u'_id': 1, u'list': [1, 2, 3], u'name': u'One'}]
 
 Alternatively, some of the methods provided can be functions, which will be used to test the values:
 
 	>>> db.get('test', {'list': lambda lst: (4 in lst)})
-	[{'_collection': u'test', '_id': 2, u'list': [2, 3, 4], u'name': u'Two'}, {'_collection': u'test', '_id': 3, u'list': [3, 4, 5], u'name': u'Three'}]
+	[{u'_collection': u'test', u'_id': 2, u'list': [2, 3, 4], u'name': u'Two'}, {u'_collection': u'test', u'_id': 3, u'list': [3, 4, 5], u'name': u'Three'}]
 
 Having retrieved an object, you can edit it, and then save it again using the save() method:
 
@@ -40,7 +40,7 @@ Or save multiple items at once using save_all():
 	>>> for item in edits: item['x'] = 5
 	>>> db.save_all(edits)
 	>>> db.get('test', {'x': 5})
-	[{u'name': u'Two', u'_collection': u'test', u'x': 5, '_id': 2, u'list': [2, 3, 4]}, {u'name': u'Three', u'_collection': u'test', u'x': 5, '_id': 3, u'list': [3, 4, 5]}]
+	[{u'_collection': u'test', u'x': 5, u'_id': 2, u'list': [2, 3, 4], u'name': u'Two'}, {u'_collection': u'test', u'x': 5, u'_id': 3, u'list': [3, 4, 5], u'name': u'Three'}]
 
 Delete items directly with their id:
 
@@ -53,7 +53,7 @@ Or by using the objects returned from get:
 Which will have removed them from the database:
 
 	>>> db.get('test')
-	[{u'name': u'One', u'_collection': u'test', '_id': 1, u'list': [1, 2, 3], u'hello': u'world'}]
+	[{u'_collection': u'test', u'_id': 1, u'list': [1, 2, 3], u'name': u'One', u'hello': u'world'}]
 
 Like sqlite3, the database is in a file in the filesystem which can be copied/deleted/etc: 
 
@@ -69,8 +69,8 @@ except ImportError:
 
 def inception_factory(cursor, row):
 	rv = json.loads(row[2])
-	rv.update(_id=row[0],
-			  _collection=unicode(row[1]))
+	rv[u'_id']=row[0]
+	rv[u'_collection']=unicode(row[1])
 	return rv
 
 def filter_results(results, filters):
