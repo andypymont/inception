@@ -60,6 +60,7 @@ Like sqlite3, the database is in a file in the filesystem which can be copied/de
 	>>> import os; os.remove('__test__.db')
 """
 
+import datetime
 import sqlite3
 
 try:
@@ -84,6 +85,10 @@ def filter_results(results, filters):
 					return False
 		return True
 	return [result for result in results if filter_result(result, filters)]
+
+def inception_serialise(obj):
+	if isinstance(obj, datetime.datetime):
+		return obj.isoformat()
 
 def _contains(searchtext):
 	"""
@@ -154,10 +159,10 @@ class Database():
 		docid = document.get('_id', None)
 		if docid:
 			sql, params = ('insert or replace into inception (id, collection, document) values (?, ?, ?)',
-						   (int(docid), collection, json.dumps(document)))
+						   (int(docid), collection, json.dumps(document, default=inception_serialise)))
 		else:
 			sql, params = ('insert or replace into inception (collection, document) values (?, ?)',
-						   (collection, json.dumps(document)))
+						   (collection, json.dumps(document, default=inception_serialise)))
 
 		db = self.__dbget()
 		db.execute(sql, params)
@@ -174,10 +179,10 @@ class Database():
 			docid = document.get('_id', None)
 			if docid:
 				sql, params = ('insert or replace into inception (id, collection, document) values (?, ?, ?)',
-						   (docid, collection, json.dumps(document)))
+						   (docid, collection, json.dumps(document, default=inception_serialise)))
 			else:
 				sql, params = ('insert or replace into inception (collection, document) values (?, ?)',
-							   (collection, json.dumps(document)))
+							   (collection, json.dumps(document, default=inception_serialise)))
 			db.execute(sql, params)
 
 		db.commit()
