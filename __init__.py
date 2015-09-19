@@ -1,4 +1,4 @@
-"""Simple no-SQL database implemented using Python SQLite and designed for Flask web applications.
+"""Simple no-SQL database designed for Flask web applications. Can use either sqlite3 or mySQL as the base database.
 
 A database within a database, and there's no sequel.
 
@@ -62,6 +62,7 @@ Like sqlite3, the database is in a file in the filesystem which can be copied/de
 
 import datetime
 import sqlite3
+import MySQLdb
 
 try:
 	import simplejson as json
@@ -195,6 +196,36 @@ class Database():
 	def delete(self, document):
 		if '_id' in document.keys():
 			self.delete_by_id(document['_id'])
+
+class MySQLDatabase(Database):
+
+	def __init__(self, hostaddress, dbname, username, password, app=None):
+		self.hostaddress = hostaddress
+		self.dbname = dbname
+		self.username = username
+		self.password = password
+		self.app = app
+		if app:
+			from flask import g
+			self.__dbclose = app.teardown_appcontext(self.__dbclose)
+
+	def __dbconnect(self):
+		rv = MySQLdb.connect(host=self.hostaddress, user=self.username, passwd=self.password, db=self.dbname)
+		rv.row_factory = inception_factory
+		return rv
+
+	def __dbget(self):
+		if self.app:
+			if not hasattr(g, 'inception_mysql_db'):
+				g.inception_mysq_db = self.__dbconnect()
+			return g.inception_mysql_db
+		else:
+			return self.__dbconnect()
+
+	def __dbclose(self):
+		if self.app:
+			if hasattr(g, 'inception_mysql_db'):
+				g.inception_mysql_db.close()
 
 def _test():
 	import doctest
