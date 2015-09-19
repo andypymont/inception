@@ -225,7 +225,7 @@ class Database(object):
 
 class MySQLDatabase(Database):
 
-	SQL_CREATETABLE = 'create table inception (id integer primary key auto_increment, collection text not null, document text);'
+	SQL_CREATETABLE = 'create table inception (id integer primary key auto_increment, collection text not null, document mediumtext);'
 	SQL_SELECT_BY_ID = 'select * from inception where id = %s'
 	SQL_SELECT_COLLECTION = 'select * from inception where collection = %s'
 	SQL_SELECT_ALL = 'select * from inception'
