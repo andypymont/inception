@@ -250,7 +250,22 @@ class MySQLDatabase(Database):
 		return [inception_factory(None, row) for row in super(MySQLDatabase, self).get_by_id(id)]
 
 	def get(self, collection=None, query=None):
-		return [inception_factory(None, row) for row in super(MySQLDatabase, self).get(collection, query)]
+		db = self._dbget()
+
+		if collection:
+			sql, params = self.SQL_SELECT_COLLECTION, (collection,)
+		else:
+			sql, params = self.SQL_SELECT_ALL, ()
+
+		c = db.cursor()
+		c.execute(sql, params)
+		results = [inception_factory(None, row) for row in c.fetchall()]
+
+		if query:
+			results = filter_results(results, query)
+		c.close()
+
+		return results
 
 
 def _test():
