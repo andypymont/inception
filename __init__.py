@@ -6,7 +6,7 @@ Initialise the database by creating a new instance, specifying the path. If this
 method to initialise (create the tables etc.):
 
 	>>> db = Database('__test__.db')
-	>>> db._Database_dbinit()
+	>>> db._dbinit()
 
 Save dictionaries (containing nested lists/dictionaries as needed) for future retrieval:
 
@@ -101,7 +101,16 @@ def _contains(searchtext):
 
 	return contains
 
-class Database():
+class Database(object):
+
+	SQL_DROPTABLE = 'drop table if exists inception;'
+	SQL_CREATETABLE = 'create table inception (id integer primary key autoincrement, collection text not null, document text);'
+	SQL_SELECT_BY_ID = 'select * from inception where id = ?'
+	SQL_SELECT_COLLECTION = 'select * from inception where collection = ?'
+	SQL_SELECT_ALL = 'select * from inception'
+	SQL_INSERT_WITH_ID = 'insert or replace into inception (id, collection, document) values (?, ?, ?)'
+	SQL_INSERT_WITHOUT_ID = 'insert or replace into inception (collection, document) values (?, ?)'
+	SQL_DELETE_BY_ID = 'delete from inception where id = ?'
 
 	def __init__(self, path, app=None):
 		self.dbpath = path
@@ -117,29 +126,29 @@ class Database():
 
 	def _dbget(self):
 		if self.app:
-			if not hasattr(g, 'inception_sqlite_db'):
-				g.inception_sqlite_db = self._dbconnect()
-			return g.inception_sqlite_db
+			if not hasattr(g, 'inception__db'):
+				g.inception_db = self._dbconnect()
+			return g.inception_db
 		else:
 			return self._dbconnect()
 
 	def _dbclose(self):
 		if self.app:
-			if hasattr(g, 'inception_sqlite_db'):
-				g.inception_sqlite_db.close()
+			if hasattr(g, 'inception__db'):
+				g.inception_db.close()
 
 	def _dbinit(self):
 		db = self._dbget()
 		c = db.cursor()
-		c.execute('drop table if exists inception;')
-		c.execute('create table inception (id integer primary key autoincrement, collection text not null, document text);')
+		c.execute(self.SQL_DROPTABLE)
+		c.execute(self.SQL_CREATETABLE)
 		db.commit()
 		c.close()
 
 	def get_by_id(self, id):
 		db = self._dbget()
 		c = db.cursor()
-		rv = c.execute('select * from inception where id = ?', (id,)).fetchone()
+		rv = c.execute(self.SQL_SELECT_BY_ID, (id,)).fetchone()
 		c.close()
 		return rv
 
@@ -147,9 +156,9 @@ class Database():
 		db = self._dbget()
 
 		if collection:
-			sql, params = 'select * from inception where collection = ?', (collection,)
+			sql, params = self.SQL_SELECT_COLLECTION, (collection,)
 		else:
-			sql, params = 'select * from inception', ()
+			sql, params = self.SQL_SELECT_ALL, ()
 
 		c = db.cursor()
 		results = c.execute(sql, params).fetchall()
@@ -167,10 +176,10 @@ class Database():
 
 		docid = document.get('_id', None)
 		if docid:
-			sql, params = ('insert or replace into inception (id, collection, document) values (?, ?, ?)',
+			sql, params = (self.SQL_INSERT_WITH_ID,
 						   (int(docid), collection, json.dumps(document, default=inception_serialise)))
 		else:
-			sql, params = ('insert or replace into inception (collection, document) values (?, ?)',
+			sql, params = (self.SQL_INSERT_WITHOUT_ID,
 						   (collection, json.dumps(document, default=inception_serialise)))
 
 		db = self._dbget()
@@ -181,6 +190,7 @@ class Database():
 
 	def save_all(self, documents, collection=None):
 		db = self._dbget()
+		c = db.cursor()
 
 		for document in documents:
 			collection = document.get('_collection', None) or collection
@@ -189,21 +199,21 @@ class Database():
 
 			docid = document.get('_id', None)
 			if docid:
-				sql, params = ('insert or replace into inception (id, collection, document) values (?, ?, ?)',
+				sql, params = (self.SQL_INSERT_WITH_ID,
 						   (docid, collection, json.dumps(document, default=inception_serialise)))
 			else:
-				sql, params = ('insert or replace into inception (collection, document) values (?, ?)',
+				sql, params = (self.SQL_INSERT_WITHOUT_ID,
 							   (collection, json.dumps(document, default=inception_serialise)))
 
-		c = db.cursor()
-		c.execute(sql, params)
+			c.execute(sql, params)
+		
 		db.commit()
 		c.close()
 
 	def delete_by_id(self, id):
 		db = self._dbget()
 		c = db.cursor()
-		c.execute('delete from inception where id = ?', (id,))
+		c.execute(self.SQL_DELETE_BY_ID, (id,))
 		db.commit()
 		c.close()
 
@@ -212,6 +222,14 @@ class Database():
 			self.delete_by_id(document['_id'])
 
 class MySQLDatabase(Database):
+
+	SQL_CREATETABLE = 'create table inception (id integer primary key auto_increment, collection text not null, document text);'
+	SQL_SELECT_BY_ID = 'select * from inception where id = %s'
+	SQL_SELECT_COLLECTION = 'select * from inception where collection = %s'
+	SQL_SELECT_ALL = 'select * from inception'
+	SQL_INSERT_WITH_ID = 'replace into inception (id, collection, document) values (%s, %s, %s)'
+	SQL_INSERT_WITHOUT_ID = 'replace into inception (collection, document) values (%s, %s)'
+	SQL_DELETE_BY_ID = 'delete from inception where id = %s'	
 
 	def __init__(self, hostaddress, dbname, username, password, app=None):
 		self.hostaddress = hostaddress
@@ -227,27 +245,6 @@ class MySQLDatabase(Database):
 		rv = MySQLdb.connect(host=self.hostaddress, user=self.username, passwd=self.password, db=self.dbname)
 		rv.row_factory = inception_factory
 		return rv
-
-	def _dbget(self):
-		if self.app:
-			if not hasattr(g, 'inception_mysql_db'):
-				g.inception_mysq_db = self._dbconnect()
-			return g.inception_mysql_db
-		else:
-			return self._dbconnect()
-
-	def _dbclose(self):
-		if self.app:
-			if hasattr(g, 'inception_mysql_db'):
-				g.inception_mysql_db.close()
-
-	def _dbinit(self):
-		db = self._dbget()
-		c = db.cursor()
-		c.execute('drop table if exists inception;')
-		c.execute('create table inception (id integer primary key auto_increment, collection text not null, document text);')
-		db.commit()
-		c.close()
 
 def _test():
 	import doctest
