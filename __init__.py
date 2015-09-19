@@ -148,7 +148,8 @@ class Database(object):
 	def get_by_id(self, id):
 		db = self._dbget()
 		c = db.cursor()
-		rv = c.execute(self.SQL_SELECT_BY_ID, (id,)).fetchone()
+		c.execute(self.SQL_SELECT_BY_ID, (id,))
+		rv = c.fetchone()
 		c.close()
 		return rv
 
@@ -161,7 +162,8 @@ class Database(object):
 			sql, params = self.SQL_SELECT_ALL, ()
 
 		c = db.cursor()
-		results = c.execute(sql, params).fetchall()
+		c.execute(sql, params)
+		results = c.fetchall()
 
 		if query:
 			results = filter_results(results, query)
@@ -245,6 +247,22 @@ class MySQLDatabase(Database):
 		rv = MySQLdb.connect(host=self.hostaddress, user=self.username, passwd=self.password, db=self.dbname)
 		rv.row_factory = inception_factory
 		return rv
+
+	def get(self, collection=None, query=None):
+		db = self._dbget()
+
+		if collection:
+			sql, params = self.SQL_SELECT_COLLECTION, (collection,)
+		else:
+			sql, params = self.SQL_SELECT_ALL, ()
+
+
+
+		if query:
+			results = filter_results(results, query)
+		c.close()
+
+		return results
 
 def _test():
 	import doctest
