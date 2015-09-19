@@ -55,7 +55,7 @@ Which will have removed them from the database:
 	>>> db.get('test')
 	[{u'_collection': u'test', u'_id': 1, u'list': [1, 2, 3], u'name': u'One', u'hello': u'world'}]
 
-Like sqlite3, the database is in a file in the filesystem which can be copied/deleted/etc: 
+Like sqlite3, the database is in a file in the filesystem which can be copied/deleted/etc:
 
 	>>> import os; os.remove('__test__.db')
 """
@@ -130,27 +130,31 @@ class Database():
 
 	def _dbinit(self):
 		db = self._dbget()
-		db.execute('drop table if exists inception;')
-		db.execute('create table inception (id integer primary key autoincrement, collection text not null, document text);')
+		c = db.cursor()
+		c.execute('drop table if exists inception;')
+		c.execute('create table inception (id integer primary key autoincrement, collection text not null, document text);')
 		db.commit()
+		c.close()
 
 	def get_by_id(self, id):
 		db = self._dbget()
-		return db.execute('select * from inception where id = ?', (id,)).fetchone()
+		c = db.cursor()
+		rv = c.execute('select * from inception where id = ?', (id,)).fetchone()
+		c.close()
+		return rv
 
 	def get(self, collection=None, query=None):
-		db = self._dbget()
-		
-		if collection:
-			sql, params = 'select * from inception where collection = ?', (collection,)
-		else:
+	    db = self._dbget()
+        if collection:
+            sql, params = 'select * from inception where collection = ?', (collection,)
+        else:
 			sql, params = 'select * from inception', ()
-
-		results = db.execute(sql, params).fetchall()
-		if query:
-			results = filter_results(results, query)
-
-		return results
+        c = db.cursor()
+        results = c.execute(sql, params).fetchall()
+        if query:
+            results = filter_results(results, query)
+        c.close()
+        return results
 
 	def save(self, document, collection=None):
 		collection = document.get('_collection', None) or collection
@@ -166,12 +170,14 @@ class Database():
 						   (collection, json.dumps(document, default=inception_serialise)))
 
 		db = self._dbget()
-		db.execute(sql, params)
+		c = db.cursor()
+		c.execute(sql, params)
 		db.commit()
+		c.close()
 
 	def save_all(self, documents, collection=None):
 		db = self._dbget()
-		
+
 		for document in documents:
 			collection = document.get('_collection', None) or collection
 			if not collection:
@@ -184,14 +190,18 @@ class Database():
 			else:
 				sql, params = ('insert or replace into inception (collection, document) values (?, ?)',
 							   (collection, json.dumps(document, default=inception_serialise)))
-			db.execute(sql, params)
 
+		c = db.cursor()
+		c.execute(sql, params)
 		db.commit()
+		c.close()
 
 	def delete_by_id(self, id):
 		db = self._dbget()
-		db.execute('delete from inception where id = ?', (id,))
+		c = db.cursor()
+		c.execute('delete from inception where id = ?', (id,))
 		db.commit()
+		c.close()
 
 	def delete(self, document):
 		if '_id' in document.keys():
@@ -231,8 +241,9 @@ class MySQLDatabase(Database):
 		db = self._dbget()
 		c = db.cursor()
 		c.execute('drop table if exists inception;')
-		c.execute('create table inception (id integer primary key autoincrement, collection text not null, document text);')
+		c.execute('create table inception (id integer primary key auto_increment, collection text not null, document text);')
 		db.commit()
+		c.close()
 
 def _test():
 	import doctest
