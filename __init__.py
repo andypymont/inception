@@ -227,6 +227,13 @@ class MySQLDatabase(Database):
 			if hasattr(g, 'inception_mysql_db'):
 				g.inception_mysql_db.close()
 
+	def __dbinit(self):
+		db = self.__dbget()
+		db.execute('drop table if exists inception;')
+		db.execute('create table inception (id integer primary key autoincrement, collection text not null, document text);')
+		db.commit()
+
+
 def _test():
 	import doctest
 	doctest.testmod()
