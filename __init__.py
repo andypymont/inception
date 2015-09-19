@@ -244,9 +244,14 @@ class MySQLDatabase(Database):
 			self._dbclose = app.teardown_appcontext(self._dbclose)
 
 	def _dbconnect(self):
-		rv = MySQLdb.connect(host=self.hostaddress, user=self.username, passwd=self.password, db=self.dbname)
-		rv.row_factory = inception_factory
-		return rv
+		return MySQLdb.connect(host=self.hostaddress, user=self.username, passwd=self.password, db=self.dbname)
+
+	def get_by_id(self, id):
+		return [inception_factory(None, row) for row in super(MySQLDatabase, self).get_by_id(id)]
+
+	def get(self, collection=None, query=None):
+		return [inception_factory(None, row) for row in super(MySQLDatabase, self).get(collection, query)]
+
 
 def _test():
 	import doctest
