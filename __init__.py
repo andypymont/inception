@@ -2,11 +2,11 @@
 
 A database within a database, and there's no sequel.
 
-Initialise the database by creating a new instance, specifying the path. If this isn't an existing database, use the __dbinit()
+Initialise the database by creating a new instance, specifying the path. If this isn't an existing database, use the _dbinit()
 method to initialise (create the tables etc.):
 
 	>>> db = Database('__test__.db')
-	>>> db._Database__dbinit()
+	>>> db._Database_dbinit()
 
 Save dictionaries (containing nested lists/dictionaries as needed) for future retrieval:
 
@@ -108,38 +108,38 @@ class Database():
 		self.app = app
 		if app:
 			from flask import g
-			self.__dbclose = app.teardown_appcontext(self.__dbclose)
+			self._dbclose = app.teardown_appcontext(self._dbclose)
 
-	def __dbconnect(self):
+	def _dbconnect(self):
 		rv = sqlite3.connect(self.dbpath, detect_types=sqlite3.PARSE_DECLTYPES)
 		rv.row_factory = inception_factory
 		return rv
 
-	def __dbget(self):
+	def _dbget(self):
 		if self.app:
 			if not hasattr(g, 'inception_sqlite_db'):
-				g.inception_sqlite_db = self.__dbconnect()
+				g.inception_sqlite_db = self._dbconnect()
 			return g.inception_sqlite_db
 		else:
-			return self.__dbconnect()
+			return self._dbconnect()
 
-	def __dbclose(self):
+	def _dbclose(self):
 		if self.app:
 			if hasattr(g, 'inception_sqlite_db'):
 				g.inception_sqlite_db.close()
 
-	def __dbinit(self):
-		db = self.__dbget()
+	def _dbinit(self):
+		db = self._dbget()
 		db.execute('drop table if exists inception;')
 		db.execute('create table inception (id integer primary key autoincrement, collection text not null, document text);')
 		db.commit()
 
 	def get_by_id(self, id):
-		db = self.__dbget()
+		db = self._dbget()
 		return db.execute('select * from inception where id = ?', (id,)).fetchone()
 
 	def get(self, collection=None, query=None):
-		db = self.__dbget()
+		db = self._dbget()
 		
 		if collection:
 			sql, params = 'select * from inception where collection = ?', (collection,)
@@ -165,12 +165,12 @@ class Database():
 			sql, params = ('insert or replace into inception (collection, document) values (?, ?)',
 						   (collection, json.dumps(document, default=inception_serialise)))
 
-		db = self.__dbget()
+		db = self._dbget()
 		db.execute(sql, params)
 		db.commit()
 
 	def save_all(self, documents, collection=None):
-		db = self.__dbget()
+		db = self._dbget()
 		
 		for document in documents:
 			collection = document.get('_collection', None) or collection
@@ -189,7 +189,7 @@ class Database():
 		db.commit()
 
 	def delete_by_id(self, id):
-		db = self.__dbget()
+		db = self._dbget()
 		db.execute('delete from inception where id = ?', (id,))
 		db.commit()
 
@@ -207,28 +207,28 @@ class MySQLDatabase(Database):
 		self.app = app
 		if app:
 			from flask import g
-			self.__dbclose = app.teardown_appcontext(self.__dbclose)
+			self._dbclose = app.teardown_appcontext(self._dbclose)
 
-	def __dbconnect(self):
+	def _dbconnect(self):
 		rv = MySQLdb.connect(host=self.hostaddress, user=self.username, passwd=self.password, db=self.dbname)
 		rv.row_factory = inception_factory
 		return rv
 
-	def __dbget(self):
+	def _dbget(self):
 		if self.app:
 			if not hasattr(g, 'inception_mysql_db'):
-				g.inception_mysq_db = self.__dbconnect()
+				g.inception_mysq_db = self._dbconnect()
 			return g.inception_mysql_db
 		else:
-			return self.__dbconnect()
+			return self._dbconnect()
 
-	def __dbclose(self):
+	def _dbclose(self):
 		if self.app:
 			if hasattr(g, 'inception_mysql_db'):
 				g.inception_mysql_db.close()
 
-	def __dbinit(self):
-		db = self.__dbget()
+	def _dbinit(self):
+		db = self._dbget()
 		c = db.cursor()
 		c.execute('drop table if exists inception;')
 		c.execute('create table inception (id integer primary key autoincrement, collection text not null, document text);')
