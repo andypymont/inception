@@ -248,22 +248,6 @@ class MySQLDatabase(Database):
 		rv.row_factory = inception_factory
 		return rv
 
-	def get(self, collection=None, query=None):
-		db = self._dbget()
-
-		if collection:
-			sql, params = self.SQL_SELECT_COLLECTION, (collection,)
-		else:
-			sql, params = self.SQL_SELECT_ALL, ()
-
-
-
-		if query:
-			results = filter_results(results, query)
-		c.close()
-
-		return results
-
 def _test():
 	import doctest
 	doctest.testmod()
