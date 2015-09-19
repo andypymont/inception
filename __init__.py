@@ -229,10 +229,10 @@ class MySQLDatabase(Database):
 
 	def __dbinit(self):
 		db = self.__dbget()
-		db.execute('drop table if exists inception;')
-		db.execute('create table inception (id integer primary key autoincrement, collection text not null, document text);')
+		c = db.cursor()
+		c.execute('drop table if exists inception;')
+		c.execute('create table inception (id integer primary key autoincrement, collection text not null, document text);')
 		db.commit()
-
 
 def _test():
 	import doctest
