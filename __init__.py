@@ -149,7 +149,7 @@ class Database(object):
 		db = self._dbget()
 		c = db.cursor()
 		c.execute(self.SQL_SELECT_BY_ID, (id,))
-		rv = c.fetchone()[0]
+		rv = c.fetchone()
 		c.close()
 		return rv
 
@@ -247,7 +247,7 @@ class MySQLDatabase(Database):
 		return MySQLdb.connect(host=self.hostaddress, user=self.username, passwd=self.password, db=self.dbname)
 
 	def get_by_id(self, id):
-		return [inception_factory(None, row) for row in super(MySQLDatabase, self).get_by_id(id)]
+		return inception_factory(None, super(MySQLDatabase, self).get_by_id(id))
 
 	def get(self, collection=None, query=None):
 		db = self._dbget()
