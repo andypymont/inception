@@ -144,17 +144,21 @@ class Database():
 		return rv
 
 	def get(self, collection=None, query=None):
-	    db = self._dbget()
-        if collection:
-            sql, params = 'select * from inception where collection = ?', (collection,)
-        else:
+		db = self._dbget()
+
+		if collection:
+			sql, params = 'select * from inception where collection = ?', (collection,)
+		else:
 			sql, params = 'select * from inception', ()
-        c = db.cursor()
-        results = c.execute(sql, params).fetchall()
-        if query:
-            results = filter_results(results, query)
-        c.close()
-        return results
+
+		c = db.cursor()
+		results = c.execute(sql, params).fetchall()
+
+		if query:
+			results = filter_results(results, query)
+		c.close()
+
+		return results
 
 	def save(self, document, collection=None):
 		collection = document.get('_collection', None) or collection
