@@ -149,7 +149,7 @@ class Database(object):
 		db = self._dbget()
 		c = db.cursor()
 		c.execute(self.SQL_SELECT_BY_ID, (id,))
-		rv = c.fetchone()
+		rv = c.fetchone()[0]
 		c.close()
 		return rv
 
